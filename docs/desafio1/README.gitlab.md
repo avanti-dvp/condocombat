@@ -76,7 +76,7 @@ npm install -g netlify-cli
 netlify login
 
 # Criar novo site
-netlify sites:create --name condocombat-landing
+netlify sites:create --name condocombat-landing-seuApelido
 
 # O comando retorna o Site ID — anote-o!
 ```
