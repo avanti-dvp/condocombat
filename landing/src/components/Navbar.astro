@@ -1,4 +1,6 @@
 ---
+const appUrl = import.meta.env.PUBLIC_APP_URL || 'https://app.condocombat.com';
+
 const navLinks = [
   { label: 'Início', href: '#hero' },
   { label: 'Recursos', href: '#recursos' },
@@ -28,7 +30,7 @@ const navLinks = [
     </ul>
 
     <a
-      href="https://app.condocombat.com"
+      href={appUrl}
       class="hidden rounded-lg bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-rose-700 md:inline-block"
     >
       Acessar Plataforma
@@ -56,7 +58,7 @@ const navLinks = [
           ))}
           <li class="pt-2">
             <a
-              href="https://app.condocombat.com"
+              href={appUrl}
               class="block rounded-lg bg-rose-600 px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-rose-700"
             >
               Acessar Plataforma

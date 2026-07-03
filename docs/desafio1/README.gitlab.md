@@ -116,6 +116,7 @@ Vá em **Settings → CI/CD → Variables** e adicione:
 | `NETLIFY_AUTH_TOKEN` | Token de autenticação da Netlify | Netlify → Clica na foto de perfil no canto superior direito → User Settings → Applications → Personal access tokens → New access token | ✅ Sim |
 | `NETLIFY_SITE_ID` | ID do site na Netlify (UUID) | Netlify → Project configuration → General → Project ID | ✅ Sim |
 | `NETLIFY_SITE_NAME` | Nome do site (slug) | Netlify → Project configuration → General → Project name | ❌ Não |
+| `PUBLIC_APP_URL` | URL de produção do frontend (Next.js), usada no botão "Acessar Plataforma". | Variável configurada na sua infraestrutura do frontend. Ex: `https://condocombat-app.netlify.app` | ❌ Não |
 
 **Como gerar `NETLIFY_AUTH_TOKEN`:**
 1. Acesse [app.netlify.com](https://app.netlify.com)
@@ -160,6 +161,8 @@ test-landing:
 
 build-landing:
   stage: build
+  variables:
+    PUBLIC_APP_URL: $PUBLIC_APP_URL
   script:
     - cd landing
     - npm ci

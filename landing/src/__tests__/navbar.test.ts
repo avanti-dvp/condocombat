@@ -50,3 +50,16 @@ test('Navbar uses aria-label for navigation', async () => {
 
   expect(result).toContain('aria-label="Navegação principal"')
 })
+
+test('Navbar uses environment variable for CTA URL if provided', async () => {
+  import.meta.env.PUBLIC_APP_URL = 'https://custom-app.netlify.app'
+  const container = await AstroContainer.create()
+  const result = await container.renderToString(Navbar)
+
+  expect(result).toContain('Acessar Plataforma')
+  expect(result).toContain('https://custom-app.netlify.app')
+
+  // Cleanup
+  delete import.meta.env.PUBLIC_APP_URL
+})
+

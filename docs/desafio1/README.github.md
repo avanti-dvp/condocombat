@@ -113,11 +113,12 @@ Crie `landing/netlify.toml` na raiz da landing page:
 
 Vá em **Settings → Secrets and variables → Actions** e adicione:
 
-| Secret | Onde conseguir |
-|--------|----------------|
+| Secret | Onde conseguir / Descrição |
+|--------|----------------------------|
 | `NETLIFY_AUTH_TOKEN` | Netlify → Clica na foto de perfil no canto superior direito → User Settings → Applications → Personal access tokens → New access token |
 | `NETLIFY_SITE_ID` | Netlify → Project configuration → General → Project ID (UUID) |
 | `NETLIFY_SITE_NAME` | Netlify → Project configuration → General → Project name (slug) |
+| `PUBLIC_APP_URL` | URL de produção do frontend (Next.js), usada no botão "Acessar Plataforma". Ex: `https://condocombat-app.netlify.app` |
 
 **Como gerar `NETLIFY_AUTH_TOKEN`:**
 1. Acesse [app.netlify.com](https://app.netlify.com)
@@ -172,6 +173,8 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          PUBLIC_APP_URL: ${{ secrets.PUBLIC_APP_URL }}
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
