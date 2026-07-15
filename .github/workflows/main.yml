@@ -1,0 +1,46 @@
+name: CI/CD CondoCombat Landing Page
+
+on:
+  push:
+    branches:
+      - principal
+  pull_request:
+    branches:
+      - principal
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Baixa o código do seu repositório
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. Configura o ambiente Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      # 3. Instala as dependências do projeto
+      - name: Install Dependencies
+        run: npm ci
+
+      # 4. Executa os testes automatizados com o Vitest
+      - name: Run Tests (Vitest)
+        run: npx vitest run
+
+      # 5. Gera a build de produção do Astro
+      - name: Build Project
+        run: npm run build
+
+      # 6. Faz o deploy automático na Netlify
+      - name: Deploy to Netlify
+        uses: netlify/actions/cli@master
+        with:
+          args: deploy --dir=dist --prod
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
