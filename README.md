@@ -2,7 +2,7 @@
 
 **ERP satírico para gerenciar fofocas, rixas e tretas de condomínio.**
 
-Transforme o caos do seu prédio em dados acionáveis. Ocorrências em tempo real, ranking de rivalidades entre apartamentos, e um dashboard que todo síndico merece — mas nenhum está preparado.
+Transforme o caos do seu prédio em dados acionáveis. Ocorrências em tempo real, ranking de rivalidades entre apartamentos, e um dashboard que todo síndico merece — mas nenhum está preparado
 
 ```
 🏗️  Landing (Astro) → 🖥️  App (Next.js) → ⚙️  API (FastAPI)
