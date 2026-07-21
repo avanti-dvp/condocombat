@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.models.apartamento import Apartamento
+    
 from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, String
