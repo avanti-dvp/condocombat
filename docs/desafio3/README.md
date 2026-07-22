@@ -9,7 +9,9 @@ Neste desafio, você utilizará o **Terraform** para provisionar e gerenciar a i
 1. 🗄️ **Banco de Dados (PostgreSQL)** — Provisionado via IaC no **Supabase** (ou **Neon**)
 2. 🏗️ **Backend (FastAPI)** — Deploy da imagem Docker do backend (`condocombat-backend:latest`) no **Render**
 3. 🎨 **Frontend (Next.js)** — Deploy da imagem Docker do frontend (`condocombat-frontend:latest`) no **Render**
-4. 🌐 **Landing Page (Astro)** — Configuração e deploy da Landing Page via provider **Netlify** (`netlify/netlify`), substituindo a CLI manual do Desafio 1 por IaC via Terraform
+4. 🌐 **Landing Page (Astro)** — Deploy e gerenciamento via provider **Netlify** (`netlify/netlify`), substituindo o passo de deploy via Netlify CLI realizado no Desafio 1 pelo deploy automatizado via Terraform a partir do build da Landing Page.
+
+> 💡 **Recomendação Importante aos Alunos**: O passo de deploy da Landing Page que utilizava a **Netlify CLI** (`netlify deploy`) no **Desafio 1** deve ser **removido** do job de CD das pipelines anteriores. No Desafio 3, a etapa de CI deve gerar os arquivos estáticos compilados (`landing/dist`) e o **Terraform** será o responsável por realizar o deploy desses arquivos na Netlify durante o estágio de CD.
 
 ---
 
@@ -20,14 +22,14 @@ Neste desafio, você utilizará o **Terraform** para provisionar e gerenciar a i
 | 🗄️ **Database** | Supabase / Neon | `supabase/supabase` ou `kislerdm/neon` | ❌ **Não** | Instância Gerenciada | Banco de Dados PostgreSQL 16 para persistência dos dados do FastAPI. |
 | 🏗️ **Backend** | Render | `render-oss/render` | ❌ **Não** | Imagem DockerHub (CI Desafio 2) | Execução da API FastAPI a partir da imagem Docker criada na esteira de CI. |
 | 🎨 **Frontend** | Render | `render-oss/render` | ❌ **Não** | Imagem DockerHub (CI Desafio 2) | Execução do Frontend Next.js 14 a partir da imagem Docker criada na esteira de CI. |
-| 🌐 **Landing Page** | Netlify | `netlify/netlify` | ❌ **Não** | Landing Page Astro (IaC Desafio 3) | Deploy e gestão de variáveis de ambiente da Landing Page desenvolvida no Desafio 1. |
+| 🌐 **Landing Page** | Netlify | `netlify/netlify` | ❌ **Não** | Build `landing/dist` (CI Desafio 3) | Deploy e gestão de variáveis de ambiente da Landing Page Astro via Terraform. |
 
 ---
 
 ## 🔑 Como se Cadastrar e Obter Credenciais
 
 ### 1. 🗄️ Supabase (Banco de Dados PostgreSQL)
-- **Cadastro Gratuitos**: Acesse [Supabase Dashboard](https://supabase.com/dashboard/sign-in) e faça login via **GitHub** (não exige cartão de crédito).
+- **Cadastro Gratuito**: Acesse [Supabase Dashboard](https://supabase.com/dashboard/sign-in) e faça login via **GitHub** (não exige cartão de crédito).
 - **Access Token**: Gere em [Account Settings > Access Tokens](https://supabase.com/dashboard/account/tokens) clicando em **Generate new token** (utilizado como `SUPABASE_ACCESS_TOKEN`).
 - **Organization ID**: Obtenha em [Supabase Organizations](https://supabase.com/dashboard/organizations) copiando o ID da sua organização (utilizado em `database.tf`).
 
@@ -60,19 +62,21 @@ A pipeline de CD está configurada para utilizar a **versão mais recente do Ter
                │
                ▼
 ┌────────────────────────────────────────────────────────┐
-│ 1. Etapa de CI (Construída no Desafio 2)               │
+│ 1. Etapa de CI                                         │
 │    ├── Lint (Ruff / ESLint)                            │
 │    ├── Testes (pytest / Vitest)                        │
 │    ├── Build das imagens Docker (Backend e Frontend)   │
+│    ├── Build da Landing Page (gera landing/dist)       │
 │    └── Push das 2 imagens para o DockerHub             │
 └──────────────────────────┬─────────────────────────────┘
                            │
                            ▼ (Disparo do CD após sucesso no CI)
 ┌────────────────────────────────────────────────────────┐
-│ 2. Etapa de CD com Terraform (Nova no Desafio 3)       │
+│ 2. Etapa de CD com Terraform                           │
 │    ├── terraform init (Terraform Latest)               │
 │    ├── terraform plan                                  │
-│    └── terraform apply -auto-approve                   │
+│    └── terraform apply (Deploy Backend, Frontend, DB  │
+│        e Deploy do landing/dist na Netlify)            │
 └──────────────────────────┬─────────────────────────────┘
                            │
                            ▼
@@ -104,27 +108,4 @@ Escolha o guia de acordo com a plataforma que você utilizou no Desafio 2:
 - [Terraform Registry — Render Provider](https://registry.terraform.io/providers/render-oss/render/latest/docs)
 - [Terraform Registry — Supabase Provider](https://registry.terraform.io/providers/supabase/supabase/latest/docs)
 - [Terraform Registry — Netlify Provider](https://registry.terraform.io/providers/netlify/netlify/latest/docs)
-- [Render — Deploying Public Docker Images](https://render.com/docs/docker-images)
-Render Web Service (https://web...)   │
-└──────────────────────────┘
-```
-
----
-
-## ⚠️ Guia da Plataforma de CI/CD
-
-Escolha o guia de acordo com a plataforma que você utilizou no Desafio 2:
-
-| Plataforma | Guia de Implementação |
-|-----------|------------------------|
-| 🐙 **GitHub Actions** | [`README.github.md`](./README.github.md) |
-| 🦊 **GitLab CI/CD** | [`README.gitlab.md`](./README.gitlab.md) |
-
----
-
-## 📚 Referências
-
-- [Terraform Latest Documentation](https://developer.hashicorp.com/terraform/docs)
-- [Terraform Registry — Render Provider](https://registry.terraform.io/providers/render-oss/render/latest/docs)
-- [Terraform Registry — Supabase Provider](https://registry.terraform.io/providers/supabase/supabase/latest/docs)
 - [Render — Deploying Public Docker Images](https://render.com/docs/docker-images)
