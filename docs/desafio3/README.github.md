@@ -1,14 +1,15 @@
-# 🏗️ Desafio 3 — Terraform + CD do Backend, Frontend e Banco de Dados (GitHub Actions)
+# 🏗️ Desafio 3 — Terraform + CD do Backend, Frontend, Landing Page e Banco de Dados (GitHub Actions)
 
 ## 🎯 Objetivo
 
 Estender a pipeline de **CI** criada no **Desafio 2** para uma pipeline completa de **CD (Continuous Deployment)** usando o **GitHub Actions** e o **Terraform na versão mais recente**.
 
-Neste desafio, você irá reutilizar as **2 imagens Docker** publicadas no DockerHub durante a etapa de CI do Desafio 2 (`condocombat-backend` e `condocombat-frontend`) e fará o provisionamento via código (IaC):
+Neste desafio, você irá reutilizar as **2 imagens Docker** publicadas no DockerHub durante a etapa de CI do Desafio 2 (`condocombat-backend` e `condocombat-frontend`), a **Landing Page** do Desafio 1 e fará o provisionamento via código (IaC):
 
 1. **Banco de Dados PostgreSQL 16** via provider **Supabase** (ou Neon).
 2. **Backend FastAPI** via provider **Render** (Web Service a partir da Imagem Docker do DockerHub).
 3. **Frontend Next.js** via provider **Render** (Web Service a partir da Imagem Docker do DockerHub), injetando a URL da API gerada no Backend.
+4. **Landing Page Astro** via provider **Netlify** (`netlify/netlify`), gerenciando as configurações e integrações via IaC Terraform.
 
 ---
 
@@ -29,6 +30,11 @@ Neste desafio, você irá reutilizar as **2 imagens Docker** publicadas no Docke
 - **Cadastro**: Mesmo cadastro do Render via [dashboard.render.com](https://dashboard.render.com).
 - **Recurso Terraform**: `render_service` com `runtime = "image"` apontando para `${DOCKERHUB_USERNAME}/condocombat-frontend:latest` na porta 3000, recebendo a variável `NEXT_PUBLIC_API_URL`.
 
+### 4. Landing Page: Netlify (`netlify/netlify`)
+- **Plano**: Free Tier (Hospedagem gratuita de sites estáticos).
+- **Cadastro**: Via [Netlify Sign Up](https://app.netlify.com/signup) com conta do GitHub.
+- **Recurso Terraform**: `data "netlify_site"` para buscar o site da Landing Page e `netlify_environment_variable` para configurar o apontamento `PUBLIC_APP_URL`.
+
 ---
 
 ## 🔑 Passo a Passo para Obtenção de Credenciais e Tokens
@@ -42,6 +48,11 @@ Neste desafio, você irá reutilizar as **2 imagens Docker** publicadas no Docke
 1. **Cadastro/Login**: Acesse [Render Register](https://dashboard.render.com/register) e cadastre-se via GitHub.
 2. **API Key**: Acesse [Account Settings > API Keys](https://dashboard.render.com/u/settings#api-keys), clique em **Create API Key** e salve para usar em `RENDER_API_KEY`.
 3. **Owner ID**: Localize o seu ID em **Account Settings** ou no endereço da URL do Dashboard (salve para usar em `RENDER_OWNER_ID`).
+
+### 🌐 Netlify
+1. **Cadastro/Login**: Acesse [Netlify Sign Up](https://app.netlify.com/signup) e faça login via GitHub.
+2. **Personal Access Token**: Acesse [User Settings > Applications > Personal Access Tokens](https://app.netlify.com/user/applications/personal-access-tokens), clique em **New access token** e salve para usar em `NETLIFY_AUTH_TOKEN`.
+3. **Site Name**: Nome do site da Landing Page na Netlify para usar em `NETLIFY_SITE_NAME`.
 
 ---
 
@@ -62,6 +73,7 @@ No seu repositório, crie a seguinte estrutura dentro do diretório `terraform/`
     ├── database.tf           # Provisionamento do PostgreSQL (Supabase)
     ├── backend.tf            # Deploy do Container Backend (Render)
     ├── frontend.tf           # Deploy do Container Frontend (Render)
+    ├── landing.tf            # Configuração e Deploy da Landing Page (Netlify)
     └── outputs.tf            # URLs geradas
 ```
 
@@ -85,6 +97,10 @@ terraform {
       source  = "render-oss/render"
       version = "~> 1.3"
     }
+    netlify = {
+      source  = "netlify/netlify"
+      version = "~> 0.4"
+    }
   }
 }
 
@@ -95,6 +111,10 @@ provider "supabase" {
 provider "render" {
   api_key  = var.render_api_key
   owner_id = var.render_owner_id
+}
+
+provider "netlify" {
+  token = var.netlify_api_token
 }
 ```
 
@@ -129,6 +149,18 @@ variable "render_owner_id" {
 variable "backend_secret_key" {
   type        = string
   sensitive   = true
+}
+
+variable "netlify_api_token" {
+  type        = string
+  sensitive   = true
+  description = "Token de Acesso Pessoal da Netlify"
+}
+
+variable "netlify_site_name" {
+  type        = string
+  description = "Nome do site da Landing Page na Netlify"
+  default     = "condocombat-landing"
 }
 ```
 
@@ -199,6 +231,41 @@ resource "render_service" "frontend" {
 }
 ```
 
+### 6. `terraform/landing.tf`
+
+```hcl
+data "netlify_site" "landing" {
+  name = var.netlify_site_name
+}
+
+resource "netlify_environment_variable" "landing_public_url" {
+  site_id = data.netlify_site.landing.id
+  key     = "PUBLIC_APP_URL"
+  values = [
+    {
+      value   = render_service.frontend.url
+      context = "all"
+    }
+  ]
+}
+```
+
+### 7. `terraform/outputs.tf`
+
+```hcl
+output "backend_url" {
+  value = render_service.backend.url
+}
+
+output "frontend_url" {
+  value = render_service.frontend.url
+}
+
+output "landing_url" {
+  value = "https://${data.netlify_site.landing.name}.netlify.app"
+}
+```
+
 ---
 
 ## ⚙️ Passo a Passo da Pipeline no GitHub Actions (Terraform Latest)
@@ -245,6 +312,8 @@ jobs:
           TF_VAR_render_api_key: ${{ secrets.RENDER_API_KEY }}
           TF_VAR_render_owner_id: ${{ secrets.RENDER_OWNER_ID }}
           TF_VAR_backend_secret_key: ${{ secrets.BACKEND_SECRET_KEY }}
+          TF_VAR_netlify_api_token: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          TF_VAR_netlify_site_name: ${{ secrets.NETLIFY_SITE_NAME }}
 
       - name: 🚀 Terraform Apply
         run: terraform apply -auto-approve tfplan
@@ -256,6 +325,8 @@ jobs:
           TF_VAR_render_api_key: ${{ secrets.RENDER_API_KEY }}
           TF_VAR_render_owner_id: ${{ secrets.RENDER_OWNER_ID }}
           TF_VAR_backend_secret_key: ${{ secrets.BACKEND_SECRET_KEY }}
+          TF_VAR_netlify_api_token: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          TF_VAR_netlify_site_name: ${{ secrets.NETLIFY_SITE_NAME }}
 ```
 
 ---
@@ -263,6 +334,6 @@ jobs:
 ## ✅ Entregáveis do Desafio 3
 
 1. **Diretório `/terraform`** contendo os arquivos `.tf` funcionais compatíveis com a versão mais recente do Terraform (`>= 1.10.0`).
-2. **Secrets no GitHub**: `DOCKERHUB_USERNAME`, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `RENDER_API_KEY`, `RENDER_OWNER_ID`, `BACKEND_SECRET_KEY`.
+2. **Secrets no GitHub**: `DOCKERHUB_USERNAME`, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `RENDER_API_KEY`, `RENDER_OWNER_ID`, `BACKEND_SECRET_KEY`, `NETLIFY_AUTH_TOKEN`, `NETLIFY_SITE_NAME`.
 3. **Pipeline de CD `.github/workflows/deploy.yml`** usando `terraform_version: "latest"`.
-4. **URLs no ar**: Links públicos do Backend e Frontend rodando no Render conectados ao Supabase.
+4. **URLs no ar**: Links públicos do Backend e Frontend rodando no Render conectados ao Supabase e Landing Page gerenciada na Netlify via Provider Terraform.
