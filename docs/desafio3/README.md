@@ -6,7 +6,7 @@ Evoluir a esteira de CI desenvolvida no **Desafio 2** para uma pipeline completa
 
 Neste desafio, você utilizará o **Terraform** para provisionar e gerenciar a infraestrutura das 4 componentes da aplicação **CondoCombat** de forma automatizada, utilizando as **imagens Docker do Backend e do Frontend criadas no Desafio 2**, a **Landing Page criada no Desafio 1** e provedores de nuvem que **não exigem cartão de crédito para cadastro**:
 
-1. 🗄️ **Banco de Dados (PostgreSQL)** — Provisionado via IaC no **Supabase** (ou **Neon**)
+1. 🗄️ **Banco de Dados (PostgreSQL)** — Provisionado via IaC no **Supabase**
 2. 🏗️ **Backend (FastAPI)** — Deploy da imagem Docker do backend (`condocombat-backend:latest`) no **Render**
 3. 🎨 **Frontend (Next.js)** — Deploy da imagem Docker do frontend (`condocombat-frontend:latest`) no **Render**
 4. 🌐 **Landing Page (Astro)** — Deploy e gerenciamento via provider **Netlify** (`netlify/netlify`), substituindo o passo de deploy via Netlify CLI realizado no Desafio 1 pelo deploy automatizado via Terraform a partir do build da Landing Page.
@@ -19,7 +19,7 @@ Neste desafio, você utilizará o **Terraform** para provisionar e gerenciar a i
 
 | Stack | Serviço | Provider Terraform | Necessita Cartão? | Origem do Deploy | Papel no Projeto |
 |-------|---------|---------------------|-------------------|------------------|------------------|
-| 🗄️ **Database** | Supabase / Neon | `supabase/supabase` ou `kislerdm/neon` | ❌ **Não** | Instância Gerenciada | Banco de Dados PostgreSQL 16 para persistência dos dados do FastAPI. |
+| 🗄️ **Database** | Supabase | `supabase/supabase` | ❌ **Não** | Instância Gerenciada | Banco de Dados PostgreSQL 16 para persistência dos dados do FastAPI. |
 | 🏗️ **Backend** | Render | `render-oss/render` | ❌ **Não** | Imagem DockerHub (CI Desafio 2) | Execução da API FastAPI a partir da imagem Docker criada na esteira de CI. |
 | 🎨 **Frontend** | Render | `render-oss/render` | ❌ **Não** | Imagem DockerHub (CI Desafio 2) | Execução do Frontend Next.js 14 a partir da imagem Docker criada na esteira de CI. |
 | 🌐 **Landing Page** | Netlify | `netlify/netlify` | ❌ **Não** | Build `landing/dist` (CI Desafio 3) | Deploy e gestão de variáveis de ambiente da Landing Page Astro via Terraform. |
@@ -102,6 +102,16 @@ Escolha o guia de acordo com a plataforma que você utilizou no Desafio 2:
 
 ---
 
+## ✅ Entregáveis do Desafio 3
+
+1. **Diretório `/terraform`**: Arquivos `.tf` funcionais compatíveis com a versão mais recente do Terraform (`>= 1.10.0`) contendo o provisionamento do Supabase, Render e Netlify.
+2. **Remoção do Deploy por CLI**: Remoção do passo de deploy da Landing Page via CLI do Netlify no Desafio 1 e migração do deploy dos arquivos compilados (`landing/dist`) para a infraestrutura via Terraform.
+3. **Configuração de Secrets e Variáveis de Ambiente**: Cadastro de credenciais e tokens da nuvem (`SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `RENDER_API_KEY`, `RENDER_OWNER_ID`, `NETLIFY_AUTH_TOKEN`, `NETLIFY_SITE_NAME`, `DOCKERHUB_USERNAME`, `BACKEND_SECRET_KEY`) na plataforma de CI/CD escolhida.
+4. **Pipeline de CD Integrada**: Pipeline de Continuous Deployment configurada para executar `terraform init`, `terraform plan` e `terraform apply -auto-approve` utilizando a versão mais recente do Terraform (`latest`).
+5. **Aplicação Completa e Funcional**: URLs públicas no ar do Backend (API FastAPI) e Frontend (Next.js) rodando no Render conectados ao Banco de Dados PostgreSQL no Supabase, e a Landing Page no Netlify gerenciada via Terraform.
+
+---
+
 ## 📚 Referências
 
 - [Terraform Latest Documentation](https://developer.hashicorp.com/terraform/docs)
@@ -109,3 +119,4 @@ Escolha o guia de acordo com a plataforma que você utilizou no Desafio 2:
 - [Terraform Registry — Supabase Provider](https://registry.terraform.io/providers/supabase/supabase/latest/docs)
 - [Terraform Registry — Netlify Provider](https://registry.terraform.io/providers/netlify/netlify/latest/docs)
 - [Render — Deploying Public Docker Images](https://render.com/docs/docker-images)
+
